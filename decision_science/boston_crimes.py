@@ -307,10 +307,6 @@ data
 
 # <codecell>
 
-data.columns
-
-# <codecell>
-
 features = ['MEDIAN_AGE', 'PERC_OF_30_34','PERC_MARRIED_COUPLE_FAMILY', 'PERC_OTHER_STATE_OR_ABROAD', 
  'PERC_LESS_THAN_HIGH_SCHOOL', 'PERC_COLLEGE_GRADUATES']
 
@@ -322,7 +318,7 @@ model = smf.ols(formula='NB_INCIDENTS ~ MEDIAN_AGE + PERC_OF_30_34 + PERC_MARRIE
 
 # train the model to find best line
 model = model.fit() 
-model
+print(model.summary())
 
 # <markdowncell>
 
@@ -356,8 +352,8 @@ ChallengeResult(
 
 # <codecell>
 
-answer_median_age = '''
-
+answer_median_age = '''The median age is associated with a positive effect on the number of crime incidents
+as the coefficient is positive (2252.7344)
 '''
 
 # <markdowncell>
@@ -368,8 +364,13 @@ answer_median_age = '''
 
 # <codecell>
 
-answer_t_statistic = '''
-
+answer_t_statistic = '''The t-statistic value of the model for the median age is 1.820 
+By definition we calculate the following ratio:
+1. Deduct the parameter to estimate (mu) from the sample mean (Xbar)
+2. Divide the sample standard deviation (s) by the square root of the number of observations (n)
+3. Divide (1.) by (2.)
+T-statistic is used when the sample size is small and we can't use the z-tests to read the p-value 
+(to accept or reject the null hypothesis)
 '''
 
 # <markdowncell>
@@ -383,7 +384,22 @@ answer_t_statistic = '''
 
 # <codecell>
 
-# YOUR CODE HERE
+mu = 19750
+Xbar = data.NB_INCIDENTS.mean()
+numerator = Xbar - mu
+numerator
+
+# <codecell>
+
+n = data.shape[0]
+s = data.MEDIAN_AGE.mean()
+denominator = s / (n**0.5)
+denominator
+
+# <codecell>
+
+t_median_age = numerator / denominator
+t_median_age
 
 # <markdowncell>
 
@@ -391,7 +407,8 @@ answer_t_statistic = '''
 
 # <codecell>
 
-# YOUR CODE HERE
+pvalue_median_age = 0.128
+"""The pvalue for the median age is 0.128"""
 
 # <markdowncell>
 
@@ -400,8 +417,12 @@ answer_t_statistic = '''
 # <codecell>
 
 answer_p_value = """
-YOUR ANSWER HERE
-"""
+The p-value tells us how likely it is that we observe the result by pure chance. 
+Typically the threshold for the p-value is set to 5%, which would mean that our results are statistically 
+significant with a confidence level of 95%. 
+Here it is not the case, not even at 90%. 
+
+Our results would only be statistically significant at a 87% confidence level."""
 
 # <markdowncell>
 
@@ -409,7 +430,7 @@ YOUR ANSWER HERE
 
 # <codecell>
 
-# YOUR CODE HERE
+significant_regressors = ['PERC_MARRIED_COUPLE_FAMILY', 'PERC_OTHER_STATE_OR_ABROAD']
 
 # <markdowncell>
 
@@ -418,8 +439,10 @@ YOUR ANSWER HERE
 # <codecell>
 
 answer_how_much_increase = """
-YOUR ANSWER HERE
+Holding all other regressors constant, the total number of incidents decrease by 2115.1839
+when the share of families with a married couple increases by 1 percentage point in the district
 """
+
 
 # <markdowncell>
 
@@ -439,8 +462,16 @@ YOUR ANSWER HERE
 
 # <codecell>
 
+data
+
+# <codecell>
+
 answer_limitations = """
-YOUR ANSWER HERE
+The regression is based on only 12 observations. 
+We would need more data to actually have a good performing model (e.g. increase granularity).
+
+Also, the summary indicate that most of the features are not reliable (high p-value),
+which means that their predictive power is doubtful at best.
 """
 
 # <markdowncell>

@@ -1,0 +1,7 @@
+{
+    "MEDIAN_AGE": "The median age is associated with a positive effect on the number of crime incidents\nas the coefficient is positive (2252.7344)\n",
+    "T_STAT": "The t-statistic value of the model for the median age is 1.820 \nBy definition we calculate the following ratio:\n1. Deduct the parameter to estimate (mu) from the sample mean (Xbar)\n2. Divide the sample standard deviation (s) by the square root of the number of observations (n)\n3. Divide (1.) by (2.)\nT-statistic is used when the sample size is small and we can't use the z-tests to read the p-value \n(to accept or reject the null hypothesis)\n",
+    "P_VALUE": "\nThe p-value tells us how likely it is that we observe the result by pure chance. \nTypically the threshold for the p-value is set to 5%, which would mean that our results are statistically \nsignificant with a confidence level of 95%. \nHere it is not the case, not even at 90%. \n\nOur results would only be statistically significant at a 87% confidence level.",
+    "INCREASE": "\nHolding all other regressors constant, the total number of incidents decrease by 2115.1839\nwhen the share of families with a married couple increases by 1 percentage point in the district\n",
+    "LIMITATIONS": "\nThe regression is based on only 12 observations. \nWe would need more data to actually have a good performing model (e.g. increase granularity).\n\nAlso, the summary indicate that most of the features are not reliable (high p-value),\nwhich means that their predictive power is doubtful at best.\n"
+}
