@@ -607,8 +607,28 @@ def haversine_distance(lon1, lat1, lon2, lat2):
 
 distance_df = data.copy()
 distance_df['AVG_DISTANCE'] = distance_df[['LAT', 'LONG', 'LAT_POLICE_STATION', 'LONG_POLICE_STATION']].apply(lambda x: haversine_distance(*x), axis=1)
-distance_df = distance_df.groupby(['NAME']).mean()[['AVG_DISTANCE']]
+distance_df = distance_df.groupby(['NAME']).mean()[['AVG_DISTANCE']].sort_values(by='AVG_DISTANCE', ascending=False)
 distance_df
+
+# <codecell>
+
+
+
+# <codecell>
+
+# Plot the total crashes
+sns.barplot(x="total", y="abbrev", data=crashes,
+            label="Total", color="b")
+
+# Plot the crashes where alcohol was involved
+sns.barplot(x="alcohol", y="abbrev", data=crashes,
+            label="Alcohol-involved", color="b")
+
+# Add a legend and informative axis label
+ax.legend(ncol=2, loc="lower right", frameon=True)
+ax.set(xlim=(0, 24), ylabel="",
+       xlabel="Automobile collisions per billion miles")
+sns.despine(left=True, bottom=True)
 
 # <markdowncell>
 
