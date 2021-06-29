@@ -560,7 +560,11 @@ data.head()
 
 # <codecell>
 
-# YOUR CODE HERE
+data.groupby(['NAME', 'OFFENSE_CODE_GROUP'],sort=True).count().INCIDENT_NUMBER.to_frame()
+
+# <codecell>
+
+#data.groupby(['NAME', 'OFFENSE_CODE_GROUP'], group_keys=False).count().INCIDENT_NUMBER.nlargest(data.NAME.nunique()*2)
 
 # <markdowncell>
 
@@ -568,7 +572,7 @@ data.head()
 
 # <codecell>
 
-second_most_common_offence = "..."
+second_most_common_offence = "Police investigation procedure"
 
 # <markdowncell>
 
@@ -601,11 +605,10 @@ def haversine_distance(lon1, lat1, lon2, lat2):
 
 # <codecell>
 
-# YOUR CODE HERE
-
-# <codecell>
-
-# YOUR CODE HERE
+distance_df = data.copy()
+distance_df['AVG_DISTANCE'] = distance_df[['LAT', 'LONG', 'LAT_POLICE_STATION', 'LONG_POLICE_STATION']].apply(lambda x: haversine_distance(*x), axis=1)
+distance_df = distance_df.groupby(['NAME']).mean()[['AVG_DISTANCE']]
+distance_df
 
 # <markdowncell>
 
@@ -613,7 +616,7 @@ def haversine_distance(lon1, lat1, lon2, lat2):
 
 # <codecell>
 
-# YOUR CODE HERE
+average_distance_km = 3.903264
 
 # <codecell>
 
