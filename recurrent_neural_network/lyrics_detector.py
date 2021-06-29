@@ -31,6 +31,9 @@ import tensorflow as tf
 
 from unidecode import unidecode
 from gensim.models import Word2Vec
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.models import Sequential
+from tensorflow.keras import layers
 
 # <markdowncell>
 
@@ -297,7 +300,12 @@ assert len(data['embed']) == len(data)
 
 # <codecell>
 
-# YOUR CODE HERE
+data.embed.head().apply(len).to_frame()
+
+# <codecell>
+
+X = pad_sequences(data.embed, dtype='float32', padding='post', value=0)
+X.shape
 
 # <markdowncell>
 
@@ -305,7 +313,14 @@ assert len(data['embed']) == len(data)
 
 # <codecell>
 
-# YOUR CODE HERE
+artists_order = pd.get_dummies(data.artist).columns
+artists_order
+
+# <codecell>
+
+y = pd.get_dummies(data.artist).to_numpy()
+print(y.shape)
+y
 
 # <markdowncell>
 
@@ -355,7 +370,23 @@ result.write()
 
 # <codecell>
 
-# YOUR CODE HERE
+print(artists_order)
+y.sum(axis=0)
+
+# <codecell>
+
+# Let's predict always Drake
+
+# <codecell>
+
+y_baseline = np.tile([1,0,0], reps=(3029,1))
+print(y_baseline.shape)
+print(y_baseline[:10])
+print('...')
+
+# <codecell>
+
+score_baseline = y.sum(axis=0)[0] / y.sum(axis=0).sum()
 
 # <markdowncell>
 
@@ -367,7 +398,25 @@ result.write()
 
 # <codecell>
 
-# YOUR CODE HERE
+X_train.shape
+
+# <codecell>
+
+vocab_size = X_train.shape[1]
+vocab_size
+
+# <codecell>
+
+embedding_dimension = X_train.shape[2]
+embedding_dimension
+
+# <codecell>
+
+model = Sequential()
+model.add(layers.Masking(mask_value=0))
+model.add(layers.LSTM(units=10, activation='tanh')) # tanh
+model.add(layers.Dense(1))
+model.add(layers.Dense(3, activation='softmax'))
 
 # <markdowncell>
 
@@ -380,7 +429,12 @@ result.write()
 
 # <codecell>
 
-# YOUR CODE HERE
+optimizer = tf.keras.optimizers.RMSprop(
+    learning_rate=0.01, rho=0.9, momentum=0.0, epsilon=1e-07, centered=False,
+    name='RMSprop')
+
+model.compile(loss='binary_crossentropy', optimizer=optimizer , metrics=['accuracy'])
+model.fit(X_train, y_train, batch_size=16, validation_split=0.2, epochs=10, verbose=0);
 
 # <markdowncell>
 
@@ -388,11 +442,14 @@ result.write()
 
 # <codecell>
 
-# Plot below your train/val loss history
-# YOUR CODE HERE
-# YOUR CODE HERE
-# YOUR CODE HERE
+model.history.history
 
+# <codecell>
+
+# Plot below your train/val loss history ====> learning_rate=0.01 
+plt.plot(model.history.history['loss'], label='loss')
+plt.plot(model.history.history['val_loss'], label='val_loss')
+plt.legend();
 
 # Run also this code to save figure as jpg in path below (it's your job to ensure it works)
 fig = plt.gcf()
@@ -404,7 +461,11 @@ plt.savefig("tests/history.png")
 
 # <codecell>
 
-# YOUR CODE HERE
+model.evaluate(X_test, y_test, verbose=1)
+
+# <codecell>
+
+score_test = 0.6320
 
 # <markdowncell>
 
@@ -424,7 +485,3 @@ result = ChallengeResult(
     score_test = score_test,
 )
 result.write()
-
-# <codecell>
-
-
