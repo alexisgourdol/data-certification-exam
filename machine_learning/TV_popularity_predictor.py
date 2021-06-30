@@ -53,6 +53,7 @@ from sklearn.preprocessing import RobustScaler
 from sklearn.pipeline import make_pipeline, Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import ElasticNet
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_log_error
 from sklearn.model_selection import cross_validate
 
@@ -74,7 +75,7 @@ import math
 
 data = pd.read_csv('tv_movies_popularity.csv')
 print(data.shape)
-data.head()
+data.head(3)
 
 # <codecell>
 
@@ -196,6 +197,10 @@ y = data.popularity.copy()
 print(X.columns, '\n', y.name)
 X.shape, y.shape
 
+# <codecell>
+
+X.dtypes
+
 # <markdowncell>
 
 # ### Basic pipeline
@@ -277,11 +282,11 @@ cat_transformer = OneHotEncoder(handle_unknown='ignore')
 # Paralellize "num_transformer" and "One hot encoder"
 preprocessor = ColumnTransformer([
     ('num_transformer', num_transformer, numerical),
-    ('cat_transformer', cat_transformer, categorical)])
-
-# <codecell>
+    ('cat_transformer', cat_transformer, categorical)
+])
 
 basic_preprocessing = make_pipeline(preprocessor)
+
 print(type(basic_preprocessing))
 basic_preprocessing
 
@@ -293,6 +298,19 @@ X_basic_preprocessing
 # <codecell>
 
 X_basic_preprocessing.shape
+
+# <codecell>
+
+# Paralellize "num_transformer" and "One hot encoder"
+preprocessor2 = ColumnTransformer([
+    ('num_transformer', num_transformer, numerical),
+    ('cat_transformer', cat_transformer, categorical)], 
+    remainder='passthrough') #as the CT is at the beginning of the pipe, 
+#we'll need the other columns for the other transformers below => remainder=‘passthrough’) 
+
+basic_preprocessing2 = make_pipeline(preprocessor2)
+print(type(basic_preprocessing2))
+basic_preprocessing2
 
 # <markdowncell>
 
@@ -341,7 +359,7 @@ basic_pipeline
 # <codecell>
 
 from sklearn.metrics import SCORERS
-sorted(SCORERS.keys())
+[metric for metric in sorted(SCORERS.keys()) if 'log' in metric]
 
 # <codecell>
 
@@ -532,9 +550,9 @@ plt.xlabel("month_cos"); plt.ylabel("month_sin");
 # <codecell>
 
 time_pipeline = make_pipeline(
-    basic_preprocessing,
+    basic_preprocessing2,
     TimeFeaturesExtractor(),
-    CyclicalEncoder(),
+    #CyclicalEncoder(), #Implementation in the Class above fails
     ElasticNet()
 )
 time_pipeline
@@ -633,6 +651,18 @@ X_custom.head()
 
 # <codecell>
 
+final_pipeline_attempt = make_pipeline(
+    basic_preprocessing2,
+    TimeFeaturesExtractor(),
+    #CyclicalEncoder(), #Implementation in the Class above fails
+    CustomGenreAndCountryEncoder(),
+    ElasticNet()
+)
+
+final_pipeline_attempt
+
+# <codecell>
+
 ct = ColumnTransformer([
     ('num_transformer', num_transformer, numerical),
     ('cat_transformer', cat_transformer, ['original_language','status', 'has_collection', 'available_in_english']),
@@ -640,14 +670,11 @@ ct = ColumnTransformer([
     ('genre_country_transformer', CustomGenreAndCountryEncoder(), ['all_genres', 'top_countries'])
 ])
 
+final_pipeline = make_pipeline(
+    ct,
+    ElasticNet()
+)
 
-# <codecell>
-
-ct
-
-# <codecell>
-
-final_pipeline = time_pipeline
 final_pipeline
 
 # <markdowncell>
@@ -659,11 +686,7 @@ final_pipeline
 
 # <codecell>
 
-y
-
-# <codecell>
-
-final_scores_all = cross_validate(f_pipeline, X, y, cv=5,
+final_scores_all = cross_validate(final_pipeline, X, y, cv=5,
                               scoring=(scoring),
                               return_train_score=True)
 final_scores = final_scores_all['test_score']
@@ -702,7 +725,12 @@ ChallengeResult(
 
 # <codecell>
 
-# YOUR CODE HERE
+final_pipeline_forest = make_pipeline(
+    ct,
+    RandomForestRegressor()
+)
+
+final_pipeline_forest
 
 # <markdowncell>
 
@@ -717,7 +745,8 @@ ChallengeResult(
 
 # <codecell>
 
-# YOUR CODE HERE
+search = None
+best_scores = np.array([.0, .0, .0, .0, .0])
 
 # <markdowncell>
 
@@ -726,7 +755,8 @@ ChallengeResult(
 
 # <codecell>
 
-# YOUR CODE HERE
+best_pipeline = final_pipeline_forest.fit(X, y)
+best_pipeline
 
 # <markdowncell>
 
@@ -760,11 +790,32 @@ ChallengeResult(
 
 # <codecell>
 
-# YOUR CODE HERE
+show_to_predict = pd.DataFrame(dict(
+        original_title=str("La Casa de Papel"),
+        title=str("Money Heist"), 
+        release_date= pd.to_datetime(["2017-05-02"]), 
+        duration_min=float(50),
+        description=str("An unusual group of robbers attempt to carry out the most perfect robbery"), 
+        budget=float(3_000_000), 
+        original_language =str("es"), 
+        status=str("Released"),
+        number_of_awards_won =int(2), 
+        number_of_nominations=int(5), 
+        has_collection=int(1),
+        all_genres=str("Action, Crime, Mystery"), 
+        top_countries=str("Spain, France, United States of America"), 
+        number_of_top_productions=int('1'),
+        available_in_english=bool('True') 
+))
 
 # <codecell>
 
-# YOUR CODE HERE
+show_to_predict
+
+# <codecell>
+
+popularity = final_pipeline_forest.predict(show_to_predict)
+popularity
 
 # <markdowncell>
 
