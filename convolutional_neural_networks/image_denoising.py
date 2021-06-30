@@ -32,7 +32,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import glob
+import tensorflow as tf
+
 from PIL import Image
+from collections import Counter
+from tqdm import tqdm
+from tensorflow.image import resize
+
 
 # <codecell>
 
@@ -116,7 +122,15 @@ result.write()
 
 # <codecell>
 
-# YOUR CODE HERE
+len(dataset_paths)
+
+# <codecell>
+
+dataset_images = [np.array(Image.open(path)) for path in dataset_paths]
+
+# <codecell>
+
+len(dataset_images), dataset_images[53].shape
 
 # <markdowncell>
 
@@ -132,7 +146,16 @@ result.write()
 
 # <codecell>
 
-# YOUR CODE HERE
+image_dimensions = [img.ndim for img in dataset_images]
+image_dimensions[:10], image_dimensions[:10]
+
+# <codecell>
+
+Counter([img.ndim for img in dataset_images])
+
+# <codecell>
+
+"We might have 72 black and white pictures, with only 1 channel in the last dim"
 
 # <markdowncell>
 
@@ -153,7 +176,15 @@ set([x.ndim for x in dataset_images])
 
 # <codecell>
 
-# YOUR CODE HERE
+Counter([img.shape for img in dataset_images])
+
+# <codecell>
+
+dataset_resized = [resize(image, [120,100]) for image in dataset_images]
+
+# <codecell>
+
+len(dataset_resized), dataset_resized[0]
 
 # <markdowncell>
 
@@ -162,11 +193,22 @@ set([x.ndim for x in dataset_images])
 
 # <codecell>
 
-# YOUR CODE HERE
+dataset_scaled =  [image/255. for image in dataset_resized]
+dataset_scaled[0]
 
-# <markdowncell>
+# <codecell>
 
-# ### 2.2 Create (X,y) sets
+np.max([tf.math.reduce_max(img).numpy() for img in dataset_scaled])
+
+# <codecell>
+
+np.min([tf.math.reduce_min(img).numpy() for img in dataset_scaled])
+
+# <codecell>
+
+print(type(dataset_scaled))
+dataset_scaled = np.array(dataset_scaled)
+print(type(dataset_scaled))
 
 # <markdowncell>
 
@@ -193,7 +235,7 @@ dataset_noisy.shape
 
 # <codecell>
 
-# YOUR CODE HERE
+plt.imshow(dataset_noisy[53])
 
 # <markdowncell>
 
@@ -204,7 +246,17 @@ dataset_noisy.shape
 
 # <codecell>
 
-# YOUR CODE HERE
+from sklearn.model_selection import train_test_split
+X_train, X_test, Y_train, Y_test = train_test_split(dataset_noisy, dataset_scaled, test_size=0.2)
+X_train.shape, X_test.shape, Y_train.shape, Y_test.shape
+
+# <codecell>
+
+plt.imshow(dataset_noisy[530])
+
+# <codecell>
+
+plt.imshow(dataset_scaled[530])
 
 # <codecell>
 
