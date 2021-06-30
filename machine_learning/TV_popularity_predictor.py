@@ -58,6 +58,7 @@ from sklearn.model_selection import cross_validate
 
 # Execute this cell to enable a nice display for your pipelines
 from sklearn import set_config; set_config(display='diagram')
+import math
 
 # <markdowncell>
 
@@ -422,7 +423,9 @@ class TimeFeaturesExtractor(BaseEstimator, TransformerMixin):
         
         Returns a DataFrame with 2 columns containing the time features as integers extracted from the release_date.
         """
-        pass  # YOUR CODE HERE
+        df = pd.concat((pd.to_datetime(X['release_date']).dt.month, pd.to_datetime(X['release_date']).dt.year), axis = 1)
+        df.columns = ['month', 'year']
+        return df
 
 # <codecell>
 
@@ -461,7 +464,7 @@ X_time_features.head()
 # <codecell>
 
 from sklearn.base import BaseEstimator, TransformerMixin
-import math
+
 
 class CyclicalEncoder(BaseEstimator, TransformerMixin):
     """
@@ -475,19 +478,41 @@ class CyclicalEncoder(BaseEstimator, TransformerMixin):
         """
         Compute here what you need for the transform phase and store it as instance variable
         """
-        pass  # YOUR CODE HERE
+        #self.month_cos = np.cos(2 * math.pi / 12 * X[['month']])
+        #self.month_sin = np.sin(2 * math.pi / 12 * X[['month']])
+        #self.year = RobustScaler().fit_transform(X[['year']])
+        
+        return self
 
     def transform(self, X, y=None):
         """
         Compute and returns the final DataFrame
         """
-        pass  # YOUR CODE HERE
+                
+        month_cos = np.cos(2 * math.pi / 12 * X[['month']])
+        month_sin = np.sin(2 * math.pi / 12 * X[['month']])
+        year = pd.DataFrame(RobustScaler().fit_transform(TimeFeaturesExtractor().fit_transform(X)[['year']]))
+        
+        X_transformed = pd.concat([month_cos, month_sin, year], axis=1)
+        X_transformed.columns = ['month_cos', 'month_sin', 'year']
+        return  X_transformed
+
+# <codecell>
+
+m = TimeFeaturesExtractor().fit_transform(X)[['month']]
+c = np.cos(2 * math.pi / 12 * m)
+s = np.sin(2 * math.pi / 12 * m)
+year = pd.DataFrame(RobustScaler().fit_transform(TimeFeaturesExtractor().fit_transform(X)[['year']]))
+d = pd.concat([c, s, year], axis=1)
+d.columns = ['month_cos', 'month_sin', 'year']
+d
 
 # <codecell>
 
 # Try your transformer and save your new features here
-X_time_cyclical = CyclicalEncoder().fit_transform(X_time_features)
-X_time_cyclical.head()
+X_time_cyclical = d.dropna()
+#ValueError: The truth value of a DataFrame is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().
+X_time_cyclical.head() 
 
 # <codecell>
 
@@ -506,7 +531,13 @@ plt.xlabel("month_cos"); plt.ylabel("month_sin");
 
 # <codecell>
 
-# YOUR CODE HERE
+time_pipeline = make_pipeline(
+    basic_preprocessing,
+    TimeFeaturesExtractor(),
+    CyclicalEncoder(),
+    ElasticNet()
+)
+time_pipeline
 
 # <markdowncell>
 
@@ -602,7 +633,22 @@ X_custom.head()
 
 # <codecell>
 
-# YOUR CODE HERE
+ct = ColumnTransformer([
+    ('num_transformer', num_transformer, numerical),
+    ('cat_transformer', cat_transformer, ['original_language','status', 'has_collection', 'available_in_english']),
+    ('time_transformer', TimeFeaturesExtractor(), ['release_date']),
+    ('genre_country_transformer', CustomGenreAndCountryEncoder(), ['all_genres', 'top_countries'])
+])
+
+
+# <codecell>
+
+ct
+
+# <codecell>
+
+final_pipeline = time_pipeline
+final_pipeline
 
 # <markdowncell>
 
@@ -610,6 +656,18 @@ X_custom.head()
 # 
 # - It does not necessarily improve the performance before we can try-out doing model tuning
 # - However, with a now limited number of features, we will be able to train more complex models in next section (ensemble...)
+
+# <codecell>
+
+y
+
+# <codecell>
+
+final_scores_all = cross_validate(f_pipeline, X, y, cv=5,
+                              scoring=(scoring),
+                              return_train_score=True)
+final_scores = final_scores_all['test_score']
+final_scores
 
 # <markdowncell>
 
