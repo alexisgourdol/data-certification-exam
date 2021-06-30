@@ -334,9 +334,27 @@ decoder.summary()
 
 # <codecell>
 
-# CODE HERE YOUR ENCODER ARCHITECTURE AND PRINT IT'S MODEL SUMMARY
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 
-encoder = None
+def build_encoder(latent_dimensions):
+    '''returns an encoder model, of output_shape equals to latent_dimensions'''
+    encoder = Sequential()
+    
+    encoder.add(Conv2D(8, (2,2), input_shape=(120, 100, 3), activation='relu'))
+    encoder.add(MaxPooling2D(2))
+
+    encoder.add(Conv2D(16, (2, 2), activation='relu'))
+    encoder.add(MaxPooling2D(2))
+
+    encoder.add(Flatten())
+    encoder.add(Dense(latent_dimensions, activation='tanh'))
+    
+    return encoder
+
+
+encoder = build_encoder(latent_dimensions)
+encoder.summary()
 
 # <markdowncell>
 
@@ -364,7 +382,13 @@ autoencoder.summary()
 
 # <codecell>
 
-# YOUR CODE HERE
+autoencoder.compile(loss='mae',
+                  optimizer='adam')
+
+# <codecell>
+
+score_baseline = autoencoder.evaluate(X_test, Y_test)
+score_baseline
 
 # <markdowncell>
 
@@ -378,7 +402,44 @@ autoencoder.summary()
 
 # <codecell>
 
-# YOUR CODE HERE
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras import callbacks
+
+optim = Adam(learning_rate=0.01, 
+             beta_1=0.9, 
+             beta_2=0.999, 
+             epsilon=1e-07)
+
+es = callbacks.EarlyStopping(patience=5, restore_best_weights=True)
+
+autoencoder = Model(x, decoder(encoder(x)), name="autoencoder")
+autoencoder.compile(loss = 'mae',
+                    optimizer = optim)
+
+# <codecell>
+
+"""X_train_reduced = X_train[:X_train.shape[0] // 2]
+Y_train_reduced = Y_train[:Y_train.shape[0] // 2]
+print(X_train.shape, X_train.shape, Y_test.shape)
+print(X_train_reduced.shape, X_train_reduced.shape)"""
+
+# <codecell>
+
+"""autoencoder_reduced.fit(X_train_reduced, Y_train_reduced,
+                batch_size=16,
+                epochs=20,
+                validation_split=0.3,
+                callbacks=[es],
+                verbose=1)"""
+
+# <codecell>
+
+autoencoder.fit(X_train_reduced, Y_train_reduced,
+                batch_size=16,
+                epochs=40,
+                validation_split=0.3,
+                callbacks=[es],
+                verbose=1)
 
 # <markdowncell>
 
@@ -386,11 +447,14 @@ autoencoder.summary()
 
 # <codecell>
 
-# Plot below your train/val loss history
-# YOUR CODE HERE
-# YOUR CODE HERE
-# YOUR CODE HERE
+autoencoder.history.history.keys()
 
+# <codecell>
+
+# Plot below your train/val loss history
+plt.plot(autoencoder.history.history['loss'], label='loss')
+plt.plot(autoencoder.history.history['val_loss'], label='val_loss')
+plt.legend()
 
 # Run also this code to save figure as jpg in path below (it's your job to ensure it works)
 fig = plt.gcf()
@@ -405,7 +469,13 @@ plt.savefig("tests/history.png")
 
 # <codecell>
 
-# YOUR CODE HERE
+Y_pred = autoencoder.predict(X_test, verbose=1, batch_size=32)
+Y_pred.shape
+
+# <codecell>
+
+score_test = autoencoder.evaluate(Y_pred, Y_test)
+score_test
 
 # <codecell>
 
@@ -443,3 +513,7 @@ result = ChallengeResult(
     score_test = score_test,
 )
 result.write()
+
+# <codecell>
+
+
