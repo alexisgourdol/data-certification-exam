@@ -22,10 +22,10 @@
 
 # <codecell>
 
-! curl https://wagon-public-datasets.s3.amazonaws.com/certification_france_2021_q2/paintings.zip > paintings.zip
-! unzip -nq "paintings.zip" 
-! rm "paintings.zip"
-! ls -l
+#! curl https://wagon-public-datasets.s3.amazonaws.com/certification_france_2021_q2/paintings.zip > paintings.zip
+#! unzip -nq "paintings.zip" 
+#! rm "paintings.zip"
+#! ls -l
 
 # <codecell>
 
@@ -60,7 +60,7 @@ plt.imshow(im);
 # <codecell>
 
 print(f'type : {type(im)}, im_size : {im._size} , numpy shape : {np.array(im).shape}')
-#looks like numpy takes the height first, then the width
+# numpy takes the height first, then the width
 
 # <codecell>
 
